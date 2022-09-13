@@ -1,0 +1,43 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  hv1.kube.codes:
+    build: .
+    ports:
+      - "9090:9090"
+      - "8080:8080"
+      - "8443:8443"
+      - "8250:8250"
+    privileged: true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      external:
+        ipv4_address: 10.0.2.22
+    cap_add:
+      - NET_ADMIN
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: '342342fsdg43qtg09j3n'
+    volumes:
+      - mysql-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+      timeout: 20s
+      retries: 10
+    networks:
+      external:
+        ipv4_address: 10.0.2.21
+    cap_add:
+      - NET_ADMIN
+volumes:
+  mysql-db:
+networks:
+  external:
+    ipam:
+      config:
+        - subnet: "10.0.2.0/24"
+          ip_range: "10.0.2.0/24"
+          gateway: "10.0.2.1"
